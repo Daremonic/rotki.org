@@ -1,19 +1,11 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { get } from '@vueuse/core';
+import { get, set } from '@vueuse/core';
 import { usePaymentCryptoStore } from '~/store/payments/crypto';
 import { toTitleCase } from '~/utils/text';
 import CryptoChainIcon from '~/components/checkout/pay/CryptoChainIcon.vue';
 
-const props = defineProps<{
-  modelValue: string;
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void;
-}>();
-
-const { modelValue } = toRefs(props);
+const modelValue = defineModel<string>({ required: true });
 
 const cryptoStore = usePaymentCryptoStore();
 const { paymentAssets, paymentAssetsLoading } = storeToRefs(cryptoStore);
@@ -21,21 +13,22 @@ const { paymentAssets, paymentAssetsLoading } = storeToRefs(cryptoStore);
 interface Item {
   id: string;
   label: string;
+  iconUrl?: string;
 }
 
-const blockchainItems: ComputedRef<Item[]> = computed(() => Object.keys(get(paymentAssets)).map(item => ({
+const blockchainItems = computed<Item[]>(() => Object.keys(get(paymentAssets)).map(item => ({
   id: item,
   label: toTitleCase(item),
 })));
 
-const selectedChain: Ref<Item | null> = ref(null);
+const selectedChain = ref<string>('');
 
-const tokenItems: ComputedRef<Item[]> = computed(() => {
+const tokenItems = computed<Item[]>(() => {
   const chain = get(selectedChain);
   if (!chain)
     return [];
 
-  const items = get(paymentAssets)[chain.id];
+  const items = get(paymentAssets)[chain];
 
   if (!items)
     return [];
@@ -49,6 +42,7 @@ const tokenItems: ComputedRef<Item[]> = computed(() => {
     return {
       id,
       label,
+      iconUrl: item.iconUrl,
     };
   });
 });
@@ -60,7 +54,7 @@ const selectedToken = computed({
     return get(tokenItems).find(({ id }) => id === get(modelValue)) || null;
   },
   set(item: Item | null) {
-    emit('update:modelValue', item ? item.id : '');
+    set(modelValue, item ? item.id : '');
   },
 });
 
@@ -69,7 +63,7 @@ const hint = computed(() => {
   if (!chain)
     return '';
 
-  const items = get(paymentAssets)[chain.id];
+  const items = get(paymentAssets)[chain];
 
   if (!items)
     return '';
@@ -88,13 +82,20 @@ const hint = computed(() => {
       v-model="selectedChain"
       variant="outlined"
       color="primary"
-      :data="blockchainItems"
+      :options="blockchainItems"
       :disabled="paymentAssetsLoading"
-      key-prop="id"
-      text-prop="label"
+      auto-select-first
+      key-attr="id"
+      text-attr="label"
       :label="t('home.plans.tiers.step_3.labels.network')"
     >
-      <template #default="{ item }">
+      <template #item="{ item }">
+        <div class="flex items-center gap-3">
+          <CryptoChainIcon :chain="item.id" />
+          {{ item.label }}
+        </div>
+      </template>
+      <template #selection="{ item }">
         <div class="flex items-center gap-3">
           <CryptoChainIcon :chain="item.id" />
           {{ item.label }}
@@ -106,15 +107,32 @@ const hint = computed(() => {
       v-model="selectedToken"
       variant="outlined"
       color="primary"
-      :data="tokenItems"
+      :options="tokenItems"
       :disabled="paymentAssetsLoading || !selectedChain"
-      key-prop="id"
-      text-prop="label"
+      auto-select-first
+      key-attr="id"
+      text-attr="label"
       :hint="hint"
+      return-object
       :label="t('home.plans.tiers.step_3.labels.token')"
     >
-      <template #default="{ item }">
-        {{ item.label }}
+      <template #item="{ item }">
+        <div class="flex items-center gap-3">
+          <CryptoAssetIcon
+            :name="item.label"
+            :icon-url="item.iconUrl"
+          />
+          {{ item.label }}
+        </div>
+      </template>
+      <template #selection="{ item }">
+        <div class="flex items-center gap-3">
+          <CryptoAssetIcon
+            :name="item.label"
+            :icon-url="item.iconUrl"
+          />
+          {{ item.label }}
+        </div>
       </template>
     </RuiAutoComplete>
   </div>

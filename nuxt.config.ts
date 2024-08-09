@@ -144,6 +144,7 @@ export default defineNuxtConfig({
         changeOrigin: true,
         headers: {
           host: proxy.host,
+          origin: proxy.referrer,
           referer: proxy.referrer,
         },
         target: proxy.target,
@@ -174,6 +175,7 @@ export default defineNuxtConfig({
         supportEmailMailto: 'mailto:support@rotki.com',
         twitter: 'https://twitter.com/rotkiapp',
       },
+      isDev: process.env.NODE_ENV === 'development',
       loglevel: 3, // Setting info loglevel as the default.
       maintenance: false,
       recaptcha: {

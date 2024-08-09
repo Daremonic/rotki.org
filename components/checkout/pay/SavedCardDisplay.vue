@@ -71,11 +71,11 @@ const vaults = setupVaults();
 
 const { t } = useI18n();
 
-const submitPayload: Ref<{ nonce: string; bin: string }> = ref({
+const submitPayload = ref<{ nonce: string; bin: string }>({
   nonce: '',
   bin: '',
 });
-const payloadError: Ref<string> = ref('');
+const payloadError = ref<string>('');
 
 onMounted(async () => {
   try {
@@ -196,26 +196,31 @@ async function handleDeleteCard() {
     type="error"
     :description="payloadError"
   />
-  <RuiDialog v-model="showDeleteConfirmation">
-    <template #title>
-      {{ t('home.plans.tiers.step_3.saved_card.delete.title') }}
-    </template>
-    {{ t('home.plans.tiers.step_3.saved_card.delete.description') }}
-    <template #actions>
-      <RuiButton
-        variant="text"
-        color="primary"
-        @click="showDeleteConfirmation = false"
-      >
-        {{ t('actions.cancel') }}
-      </RuiButton>
-      <RuiButton
-        color="error"
-        @click="handleDeleteCard()"
-      >
-        {{ t('actions.confirm') }}
-      </RuiButton>
-    </template>
+  <RuiDialog
+    v-model="showDeleteConfirmation"
+    max-width="500"
+  >
+    <RuiCard>
+      <template #header>
+        {{ t('home.plans.tiers.step_3.saved_card.delete.title') }}
+      </template>
+      {{ t('home.plans.tiers.step_3.saved_card.delete.description') }}
+      <div class="flex justify-end gap-4 pt-4">
+        <RuiButton
+          variant="text"
+          color="primary"
+          @click="showDeleteConfirmation = false"
+        >
+          {{ t('actions.cancel') }}
+        </RuiButton>
+        <RuiButton
+          color="error"
+          @click="handleDeleteCard()"
+        >
+          {{ t('actions.confirm') }}
+        </RuiButton>
+      </div>
+    </RuiCard>
   </RuiDialog>
 </template>
 
